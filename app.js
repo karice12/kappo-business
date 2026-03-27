@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * KAPPO BUSINESS — app.js (PULANDO TELA DE LOGIN)
+ * KAPPO BUSINESS — app.js (VERSÃO CORRIGIDA FULL STACK)
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -16,37 +16,23 @@ const Utils = {
     if (n.length === 11) return `(${n.slice(0,2)}) ${n.slice(2,7)}-${n.slice(7)}`;
     if (n.length === 10) return `(${n.slice(0,2)}) ${n.slice(2,6)}-${n.slice(6)}`;
     return phone || '—';
-  },
-  escapeHtml(str) { return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); },
-  today() { return new Date().toISOString().split('T')[0]; }
+  }
 };
 
 const Toast = {
   _show(msg, type) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
     const t = document.createElement('div');
-    t.className = `toast toast-${type}`;
+    t.className = `toast ${type}`;
     t.innerHTML = `<span>${msg}</span>`;
-    document.body.appendChild(t);
+    container.appendChild(t);
     setTimeout(() => t.classList.add('visible'), 10);
-    setTimeout(() => { t.classList.remove('visible'); setTimeout(() => t.remove(), 300); }, 3000);
+    setTimeout(() => { t.classList.add('removing'); setTimeout(() => t.remove(), 300); }, 3500);
   },
   success(m) { this._show(m, 'success'); },
   error(m) { this._show(m, 'error'); },
   info(m) { this._show(m, 'info'); }
-};
-
-const Modal = {
-  open(id) { document.getElementById(id).classList.remove('hidden'); },
-  close(id) { document.getElementById(id).classList.add('hidden'); },
-  confirm(msg, onConfirm) {
-    const m = document.getElementById('modal-confirm');
-    document.getElementById('confirm-msg').innerText = msg;
-    m.classList.remove('hidden');
-    const btn = document.getElementById('btn-confirm-delete');
-    const newBtn = btn.cloneNode(true);
-    btn.parentNode.replaceChild(newBtn, btn);
-    newBtn.onclick = () => { onConfirm(); this.close('modal-confirm'); };
-  }
 };
 
 const App = {
@@ -55,99 +41,115 @@ const App = {
   async init() {
     console.log('🚀 Kappo Business Initializing...');
     
-    // TRUQUE DO BYPASS (PULANDO O LOGIN)
-    setTimeout(() => {
-        this.showApp("Admin Master");
-    }, 200);
+    // Escuta o clique do botão de login
+    const loginBtn = document.getElementById('btn-login');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', () => this.handleLogin());
+    }
 
-    this.bindEvents();
+    this.bindGlobalEvents();
+  },
+
+  async handleLogin() {
+      const userField = document.getElementById('login-user');
+      const passField = document.getElementById('login-pass');
+      const errorDiv = document.getElementById('login-error');
+
+      if (!userField || !passField) return;
+
+      const user = userField.value.trim();
+      const pass = passField.value.trim();
+
+      // Força a entrada com admin / admin123
+      if (user === 'admin' && pass === 'admin123') {
+          if (errorDiv) errorDiv.classList.add('hidden');
+          this.showApp("Admin Master");
+          Toast.success("Bem-vindo ao Kappo Business!");
+      } else {
+          if (errorDiv) {
+              errorDiv.classList.remove('hidden');
+              document.getElementById('login-error-msg').innerText = "Credenciais inválidas! Use admin / admin123";
+          }
+      }
   },
 
   showApp(userName) {
-    document.getElementById('login-screen').classList.remove('active');
-    document.getElementById('app-shell').classList.add('active');
-    document.getElementById('user-name').innerText = userName;
+    const loginScreen = document.getElementById('login-screen');
+    const appScreen = document.getElementById('app');
+    const sidebarUser = document.getElementById('sidebar-username');
+
+    if (loginScreen) loginScreen.classList.remove('active');
+    if (appScreen) appScreen.classList.add('active'); // Corrigido de app-shell para app
+    if (sidebarUser) sidebarUser.innerText = userName;
+
     this.loadView('dashboard');
   },
 
-  bindEvents() {
-    document.querySelectorAll('.nav-link').forEach(link => {
-      link.onclick = (e) => {
+  bindGlobalEvents() {
+    // Menu lateral
+    document.querySelectorAll('.nav-item').forEach(link => {
+      link.addEventListener('click', (e) => {
         e.preventDefault();
-        const view = e.currentTarget.getAttribute('data-view');
-        this.loadView(view);
-      };
+        const view = e.currentTarget.getAttribute('data-page');
+        if (view) this.loadView(view);
+      });
     });
 
-    document.querySelectorAll('[data-modal]').forEach(btn => {
-      btn.onclick = () => {
-        const id = btn.getAttribute('data-modal');
-        if (document.getElementById(id).classList.contains('hidden')) Modal.open(id);
-        else Modal.close(id);
-      };
-    });
-
-    document.getElementById('btn-save-config').onclick = () => ConfigPage.saveSupabase();
-    document.getElementById('btn-test-db').onclick = () => ConfigPage.testConnection();
-    document.getElementById('btn-save-traccar').onclick = () => ConfigPage.saveTraccar();
+    // Logout
+    const logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            location.reload(); // Recarrega o site para deslogar
+        });
+    }
   },
 
   loadView(view) {
     this.currentView = view;
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
     
+    // Troca o título do topo
+    const pageTitle = document.getElementById('page-title');
+    if (pageTitle) pageTitle.innerText = view.toUpperCase();
+
+    // Esconde todas as páginas e desativa os botões do menu
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
+    
+    // Mostra a página atual
     const target = document.getElementById(`page-${view}`);
     if (target) target.classList.add('active');
     
-    const nav = document.querySelector(`.nav-link[data-view="${view}"]`);
+    // Ativa o botão no menu
+    const nav = document.querySelector(`.nav-item[data-page="${view}"]`);
     if (nav) nav.classList.add('active');
 
+    // Inicializa a página específica
     if (view === 'dashboard') DashboardPage.init();
     if (view === 'clientes') ClientesPage.init();
-    if (view === 'financeiro') FinanceiroPage.init();
-    if (view === 'reserva') ReservaPage.init();
-    if (view === 'config') ConfigPage.init();
   }
 };
 
 const DashboardPage = {
   init() {
-    document.getElementById('stat-clientes').innerText = '0';
-    document.getElementById('stat-pendentes').innerText = '0';
-    document.getElementById('stat-receita').innerText = Utils.formatCurrency(0);
-    this.renderInadimplentes();
-  },
-  renderInadimplentes() {
-    const list = document.getElementById('list-inadimplentes');
-    list.innerHTML = '<div class="empty-state">Tudo em dia.</div>';
+    const faturamento = document.getElementById('val-faturamento');
+    const clientes = document.getElementById('val-clientes');
+
+    if (faturamento) faturamento.innerText = Utils.formatCurrency(0);
+    if (clientes) clientes.innerText = "0";
+
+    const tbody = document.getElementById('tbody-inadimplentes');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="table-empty">Nenhum inadimplente encontrado.</td></tr>';
+
+    const tbodyTx = document.getElementById('tbody-transacoes-dash');
+    if (tbodyTx) tbodyTx.innerHTML = '<tr><td colspan="5" class="table-empty">Nenhuma transação recente.</td></tr>';
   }
 };
 
 const ClientesPage = {
-  init() { this.renderTable(); },
-  renderTable() {
-    const list = document.getElementById('clientes-list');
-    list.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum cliente cadastrado no Supabase.</td></tr>';
-  }
-};
-
-const FinanceiroPage = { init() {} };
-const ReservaPage = { init() {} };
-
-const ConfigPage = {
   init() {
-    const cfg = LocalStore.getSupabaseConfig();
-    document.getElementById('cfg-supabase-url').value = cfg.url || '';
-    document.getElementById('cfg-supabase-key').value = cfg.key || '';
-  },
-  saveSupabase() {
-    Toast.success('Salvo localmente!');
-  },
-  testConnection() {
-    Toast.info('Testando Supabase...');
-  },
-  saveTraccar() {}
+    const tbody = document.getElementById('tbody-clientes');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="table-empty">Nenhum cliente cadastrado no Supabase.</td></tr>';
+  }
 };
 
 window.onload = () => App.init();
