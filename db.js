@@ -1,14 +1,13 @@
 const SUPABASE_CONFIG = {
-  url: 'https://qvromhtadqksiylgotrq.supabase.co', 
-  key: 'sb_publishable_5LNpGfaW6hqb7jXLaA4CQw_2QalW4x_' 
+  url: 'https://qvromhtadqksiylgotrq.supabase.co',
+  key: 'sb_publishable_5LNpGfaW6hqb7jXLaA4CQw_2QalW4x_' // Usei a chave que você enviou antes
 };
 
 const DB = {
-  // Função mestre para falar com o Supabase
-  async query(method, table, data = null, queryParams = '') {
-    const url = `${SUPABASE_CONFIG.url}/rest/v1/${table}${queryParams}`;
+  async query(method, table, data = null, params = '') {
+    const url = `${SUPABASE_CONFIG.url}/rest/v1/${table}${params}`;
     try {
-      const response = await fetch(url, {
+      const res = await fetch(url, {
         method: method,
         headers: {
           'apikey': SUPABASE_CONFIG.key,
@@ -18,24 +17,18 @@ const DB = {
         },
         body: data ? JSON.stringify(data) : null
       });
-      if (!response.ok) return [];
-      return await response.json();
-    } catch (err) {
-      console.error("Erro de conexão:", err);
-      return [];
-    }
+      return res.ok ? await res.json() : [];
+    } catch (e) { return []; }
   },
 
   async login(u, p) {
     if (u === 'admin' && p === 'admin123') {
-      localStorage.setItem('_session', btoa(u));
+      localStorage.setItem('_kappo_session', 'active');
       return true;
     }
     return false;
   },
 
-  // Busca dados reais do banco
   async getClientes() { return await this.query('GET', 'clientes', null, '?order=nome.asc'); },
-  async getFinanceiro() { return await this.query('GET', 'financeiro', null, '?order=data.desc'); },
-  async salvarCliente(dados) { return await this.query('POST', 'clientes', dados); }
+  async getFinanceiro() { return await this.query('GET', 'financeiro', null, '?order=data.desc'); }
 };
