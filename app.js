@@ -1,10 +1,9 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * KAPPO BUSINESS — app.js (VERSÃO FINAL COM CONEXÃO REAL)
+ * KAPPO BUSINESS — app.js (VERSÃO FINAL BLINDADA)
  * ═══════════════════════════════════════════════════════════════
  */
 
-// FERRAMENTAS DE FORMATAÇÃO (Dinheiro, Datas, etc)
 const Utils = {
   formatCurrency(val) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0); },
   formatDate(dateStr) {
@@ -20,35 +19,38 @@ const Utils = {
   today() { return new Date().toISOString().split('T')[0]; }
 };
 
-// ALERTAS NA TELA (Cantinho superior)
 const Toast = {
   _show(msg, type) {
+    const container = document.getElementById('toast-container');
+    if (!container) return alert(msg);
     const t = document.createElement('div');
     t.className = `toast toast-${type}`;
     t.innerHTML = `<span>${msg}</span>`;
-    document.getElementById('toast-container').appendChild(t);
+    container.appendChild(t);
     setTimeout(() => { t.classList.add('removing'); setTimeout(() => t.remove(), 300); }, 3000);
   },
   success(m) { this._show(m, 'success'); },
   error(m) { this._show(m, 'error'); }
 };
 
-// CONTROLE DE JANELAS (Modais)
 const Modal = {
   open(id) {
-    document.getElementById('modal-overlay').classList.remove('hidden');
-    document.getElementById(id).classList.remove('hidden');
+    const overlay = document.getElementById('modal-overlay');
+    const target = document.getElementById(id);
+    if (overlay) overlay.classList.remove('hidden');
+    if (target) target.classList.remove('hidden');
   },
   close(id) {
-    document.getElementById(id).classList.add('hidden');
-    document.getElementById('modal-overlay').classList.add('hidden');
+    const overlay = document.getElementById('modal-overlay');
+    const target = document.getElementById(id);
+    if (overlay) overlay.classList.add('hidden');
+    if (target) target.classList.add('hidden');
   }
 };
 
-// MOTOR PRINCIPAL DA APLICAÇÃO
 const App = {
   async init() {
-    console.log('🚀 Sistema Iniciado');
+    console.log('🚀 Iniciando App...');
     const session = SessionManager.verify();
     if (session) {
       this.showApp(session.sub);
@@ -57,131 +59,136 @@ const App = {
   },
 
   showApp(userName) {
-    document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('app').classList.remove('hidden');
-    document.getElementById('sidebar-username').innerText = userName;
+    const loginScreen = document.getElementById('login-screen');
+    const appScreen = document.getElementById('app');
+    const userDisplay = document.getElementById('sidebar-username');
+
+    if (loginScreen) loginScreen.classList.add('hidden');
+    if (appScreen) appScreen.classList.remove('hidden');
+    if (userDisplay) userDisplay.innerText = userName;
+    
+    // Força ir para o dashboard
     this.loadView('dashboard');
   },
 
   bindEvents() {
-    // 1. AÇÃO DE LOGIN
+    // Login
     const btnLogin = document.getElementById('btn-login');
     if (btnLogin) {
       btnLogin.onclick = async () => {
         const user = document.getElementById('login-user').value;
         const pass = document.getElementById('login-pass').value;
         const success = await DB.login(user, pass);
-        if (success) { this.showApp(user); Toast.success("Bem-vindo!"); }
+        if (success) { this.showApp(user); }
         else { Toast.error("Usuário ou senha inválidos."); }
       };
     }
 
-    // 2. NAVEGAÇÃO DO MENU
+    // Navegação do Menu
     document.querySelectorAll('.nav-item').forEach(link => {
       link.onclick = (e) => {
         const page = e.currentTarget.getAttribute('data-page');
-        if (page === 'logout') { SessionManager.destroy(); window.location.reload(); }
-        else if (page) { this.loadView(page); }
+        if (page === 'logout') { 
+            SessionManager.destroy(); 
+            window.location.reload(); 
+        } else if (page) { 
+            this.loadView(page); 
+        }
       };
     });
 
-    // 3. BOTÕES QUE ABREM MODAIS (Ex: "Novo Cliente")
+    // Fechar modais ao clicar no X ou Cancelar
     document.querySelectorAll('[data-modal]').forEach(btn => {
-      btn.onclick = () => Modal.open(btn.getAttribute('data-modal'));
+        btn.onclick = () => {
+            const id = btn.getAttribute('data-modal');
+            const modal = document.getElementById(id);
+            if (modal && !modal.classList.contains('hidden')) {
+                Modal.close(id);
+            } else {
+                Modal.open(id);
+            }
+        };
     });
 
-    // 4. LÓGICA DE SALVAR CLIENTE (O que você pediu!)
+    // Botão Salvar Cliente
     const btnSalvarCli = document.getElementById('btn-save-cliente');
     if (btnSalvarCli) {
       btnSalvarCli.onclick = async () => {
+        const nomeCli = document.getElementById('cli-nome').value;
+        if (!nomeCli) return Toast.error("Nome é obrigatório!");
+
         const dados = {
-          nome: document.getElementById('cli-nome').value,
+          nome: nomeCli,
           whatsapp: document.getElementById('cli-whatsapp').value,
-          email: document.getElementById('cli-email').value,
           dia_vencimento: parseInt(document.getElementById('cli-vencimento').value) || 10,
           valor_mensalidade: parseFloat(document.getElementById('cli-valor').value) || 0,
           status: 'ativo'
         };
 
-        if (!dados.nome) return Toast.error("Digite o nome do cliente!");
-
         btnSalvarCli.innerText = "⏳ SALVANDO...";
-        const resultado = await DB.salvarCliente(dados);
-        
-        if (resultado) {
-          Toast.success("Cliente cadastrado com sucesso!");
-          Modal.close('modal-cliente');
-          ClientesPage.init(); // Atualiza a lista de clientes
-          this.updateDashboard(); // Atualiza os números do painel
-        }
-        btnSalvarCli.innerText = "💾 Salvar Cliente";
-      };
-    }
-
-    // 5. LÓGICA DE SALVAR TRANSAÇÃO (Financeiro)
-    const btnSalvarTx = document.getElementById('btn-salvar-transacao');
-    if (btnSalvarTx) {
-      btnSalvarTx.onclick = async () => {
-        const dados = {
-          descricao: document.getElementById('tx-desc').value,
-          tipo: document.getElementById('tx-tipo').value,
-          categoria: document.getElementById('tx-cat').value,
-          valor: parseFloat(document.getElementById('tx-valor').value) || 0,
-          data: Utils.today()
-        };
-
-        const res = await DB.salvarTransacao(dados);
+        const res = await DB.salvarCliente(dados);
         if (res) {
-          Toast.success("Lançamento financeiro realizado!");
-          Modal.close('modal-transacao');
-          FinanceiroPage.init();
+          Toast.success("Cliente salvo!");
+          Modal.close('modal-cliente');
+          ClientesPage.init();
           this.updateDashboard();
         }
+        btnSalvarCli.innerText = "💾 Salvar Cliente";
       };
     }
   },
 
   loadView(view) {
+    console.log('Cambiando para:', view);
+    // 1. Esconde todas as páginas
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    // 2. Desmarca todos os itens do menu
     document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
     
-    const target = document.getElementById(`page-${view}`);
-    if (target) target.classList.add('active');
+    // 3. Ativa a página certa
+    const targetPage = document.getElementById(`page-${view}`);
+    if (targetPage) targetPage.classList.add('active');
     
-    const nav = document.querySelector(`.nav-item[data-page="${view}"]`);
-    if (nav) nav.classList.add('active');
+    // 4. Marca o menu certo
+    const navItem = document.querySelector(`.nav-item[data-page="${view}"]`);
+    if (navItem) navItem.classList.add('active');
 
-    // Carrega os dados do banco para cada tela
+    // 5. Roda a função da página
     if (view === 'dashboard') this.updateDashboard();
     if (view === 'clientes') ClientesPage.init();
     if (view === 'financeiro') FinanceiroPage.init();
   },
 
   async updateDashboard() {
-    const clientes = await DB.getClientes();
-    const transacoes = await DB.getTransacoes();
+    try {
+        const clientes = await DB.getClientes() || [];
+        const transacoes = await DB.getTransacoes() || [];
 
-    // Calcula os números do topo
-    document.getElementById('val-clientes').innerText = clientes.length;
-    
-    const totalReceita = transacoes
-      .filter(t => t.tipo === 'entrada')
-      .reduce((sum, t) => sum + t.valor, 0);
-    
-    document.getElementById('val-faturamento').innerText = Utils.formatCurrency(totalReceita);
+        // Atualiza os cards (usa IDs flexíveis para evitar erro)
+        const elCli = document.getElementById('val-clientes') || document.getElementById('stat-clientes');
+        const elFin = document.getElementById('val-faturamento') || document.getElementById('stat-receita');
+
+        if (elCli) elCli.innerText = clientes.length;
+        if (elFin) {
+            const total = transacoes.filter(t => t.tipo === 'entrada').reduce((s, t) => s + t.valor, 0);
+            elFin.innerText = Utils.formatCurrency(total);
+        }
+    } catch (e) {
+        console.error("Erro dashboard:", e);
+    }
   }
 };
 
-// LÓGICA DA PÁGINA DE CLIENTES
 const ClientesPage = {
   async init() {
-    const tbody = document.getElementById('tbody-clientes');
-    tbody.innerHTML = '<tr><td colspan="8">Carregando dados...</td></tr>';
+    const tbody = document.getElementById('tbody-clientes') || document.getElementById('clientes-list');
+    if (!tbody) return;
     
+    tbody.innerHTML = '<tr><td colspan="8">Buscando no banco...</td></tr>';
     const dados = await DB.getClientes();
     
-    if (dados.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="table-empty">Nenhum cliente no banco.</td></tr>';
+    if (!dados || dados.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="table-empty">Nenhum cliente encontrado.</td></tr>';
       return;
     }
 
@@ -189,35 +196,28 @@ const ClientesPage = {
       <tr>
         <td><strong>${cli.nome}</strong></td>
         <td>${Utils.formatPhone(cli.whatsapp)}</td>
-        <td>Vence dia ${cli.dia_vencimento}</td>
+        <td>Dia ${cli.dia_vencimento}</td>
         <td>${Utils.formatCurrency(cli.valor_mensalidade)}</td>
         <td><span class="badge badge-success">${cli.status}</span></td>
-        <td>
-          <button class="btn-icon" onclick="Toast.error('Função em desenvolvimento')">✏️</button>
-        </td>
+        <td><button class="btn-icon">✏️</button></td>
       </tr>
     `).join('');
   }
 };
 
-// LÓGICA DA PÁGINA FINANCEIRA
 const FinanceiroPage = {
   async init() {
     const tbody = document.getElementById('tbody-financeiro');
+    if (!tbody) return;
     const dados = await DB.getTransacoes();
-    
-    tbody.innerHTML = dados.map(t => `
+    tbody.innerHTML = (dados || []).map(t => `
       <tr>
         <td>${Utils.formatDate(t.data)}</td>
         <td>${t.descricao}</td>
-        <td>${t.categoria}</td>
-        <td class="${t.tipo === 'entrada' ? 'text-green' : 'text-red'}">
-          ${t.tipo === 'entrada' ? '+' : '-'} ${Utils.formatCurrency(t.valor)}
-        </td>
+        <td class="${t.tipo === 'entrada' ? 'text-green' : 'text-red'}">${Utils.formatCurrency(t.valor)}</td>
       </tr>
     `).join('');
   }
 };
 
-// Inicializa tudo ao carregar a página
 window.onload = () => App.init();
