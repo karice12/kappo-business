@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kappo Business — Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════
+       TELA DE LOGIN
+  ════════════════════════════════════════════════════ -->
+  <div id="login-screen" class="login-screen active">
+    <div class="login-bg-grid"></div>
+    <div class="login-scanlines"></div>
+
+    <div class="login-container">
+      <div class="login-logo">
+        <div class="logo-hex">
+          <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="30,2 56,16 56,44 30,58 4,44 4,16" stroke="var(--cyan)" stroke-width="1.5" fill="none"/>
+            <polygon points="30,10 48,20 48,40 30,50 12,40 12,20" stroke="var(--cyan)" stroke-width="0.5" fill="rgba(0,255,255,0.05)"/>
+            <text x="50%" y="56%" dominant-baseline="middle" text-anchor="middle" fill="var(--cyan)" font-family="Share Tech Mono" font-size="14" font-weight="bold">K</text>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="logo-main">KAPPO</span>
+          <span class="logo-sub">BUSINESS // ADMIN</span>
+        </div>
+      </div>
+
+      <div class="login-card">
+        <div class="card-corner tl"></div>
+        <div class="card-corner tr"></div>
+        <div class="card-corner bl"></div>
+        <div class="card-corner br"></div>
+
+        <p class="login-tagline">// ACESSO RESTRITO — ADMINISTRADOR MASTER</p>
+
+        <div id="login-error" class="login-error hidden">
+          <span>⚠</span> <span id="login-error-msg">Credenciais inválidas.</span>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">IDENTIFICADOR</label>
+          <div class="field-wrap">
+            <span class="field-icon">◈</span>
+            <input type="text" id="login-user" class="field-input" placeholder="admin@kappo.com" autocomplete="username" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">SENHA MASTER</label>
+          <div class="field-wrap">
+            <span class="field-icon">◉</span>
+            <input type="password" id="login-pass" class="field-input" placeholder="••••••••••••" autocomplete="current-password" />
+            <button type="button" class="field-toggle" id="toggle-pass" title="Mostrar/ocultar senha">👁</button>
+          </div>
+        </div>
+
+        <button class="btn-login" id="btn-login">
+          <span class="btn-glow"></span>
+          <span class="btn-text">▶ INICIAR SESSÃO SEGURA</span>
+        </button>
+
+        <p class="login-note">🔒 Sessão criptografada · LGPD Compliant · v2.0</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       PAINEL PRINCIPAL
+  ════════════════════════════════════════════════════ -->
+  <div id="app" class="app hidden">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <svg viewBox="0 0 40 40" width="32" height="32">
+            <polygon points="20,2 36,11 36,29 20,38 4,29 4,11" stroke="var(--cyan)" stroke-width="1.5" fill="none"/>
+            <text x="50%" y="56%" dominant-baseline="middle" text-anchor="middle" fill="var(--cyan)" font-family="Share Tech Mono" font-size="12">K</text>
+          </svg>
+          <span>KAPPO</span>
+        </div>
+        <button class="sidebar-close" id="sidebar-close">✕</button>
+      </div>
+
+      <div class="sidebar-user">
+        <div class="user-avatar">ADM</div>
+        <div class="user-info">
+          <span class="user-name" id="sidebar-username">Admin Master</span>
+          <span class="user-role">● ONLINE — ACESSO TOTAL</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <span class="nav-section-label">// NAVEGAÇÃO</span>
+        <a class="nav-item active" data-page="dashboard">
+          <span class="nav-icon">◈</span> Dashboard
+        </a>
+        <a class="nav-item" data-page="clientes">
+          <span class="nav-icon">◉</span> Clientes
+        </a>
+        <a class="nav-item" data-page="mensalidades">
+          <span class="nav-icon">◆</span> Mensalidades
+        </a>
+        <a class="nav-item" data-page="financeiro">
+          <span class="nav-icon">▲</span> Financeiro
+        </a>
+        <a class="nav-item" data-page="reserva">
+          <span class="nav-icon">◇</span> Fundo de Reserva
+        </a>
+
+        <span class="nav-section-label" style="margin-top:1.5rem">// SISTEMA</span>
+        <a class="nav-item" data-page="configuracoes">
+          <span class="nav-icon">⚙</span> Configurações
+        </a>
+        <a class="nav-item" id="btn-logout">
+          <span class="nav-icon">⏻</span> Sair
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <span id="current-time" class="sidebar-time"></span>
+        <span>KAPPO BUSINESS v2.0</span>
+      </div>
+    </aside>
+
+    <!-- OVERLAY MOBILE -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="main-content" id="main-content">
+
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <button class="topbar-menu" id="topbar-menu">☰</button>
+        <div class="topbar-breadcrumb">
+          <span class="breadcrumb-prefix">KAPPO //</span>
+          <span id="page-title">DASHBOARD</span>
+        </div>
+        <div class="topbar-actions">
+          <div class="topbar-status">
+            <span class="status-dot"></span>
+            <span class="status-text">DB ONLINE</span>
+          </div>
+          <button class="topbar-refresh" id="btn-refresh" title="Atualizar dados">↺</button>
+        </div>
+      </header>
+
+      <!-- PÁGINAS -->
+      <div class="pages-wrapper">
+
+        <!-- ── DASHBOARD ── -->
+        <section id="page-dashboard" class="page active">
+          <div class="page-header">
+            <h1 class="page-title">Dashboard <span class="title-accent">Visão Geral</span></h1>
+            <p class="page-subtitle">Métricas em tempo real do seu negócio</p>
+          </div>
+
+          <!-- MÉTRICAS -->
+          <div class="metrics-grid" id="metrics-grid">
+            <div class="metric-card cyan" id="metric-faturamento">
+              <div class="metric-label">FATURAMENTO BRUTO</div>
+              <div class="metric-value" id="val-faturamento">R$ 0,00</div>
+              <div class="metric-sub" id="sub-faturamento">Este mês</div>
+              <div class="metric-icon">📈</div>
+            </div>
+            <div class="metric-card red" id="metric-despesas">
+              <div class="metric-label">DESPESAS / CUSTOS</div>
+              <div class="metric-value" id="val-despesas">R$ 0,00</div>
+              <div class="metric-sub" id="sub-despesas">Operacionais</div>
+              <div class="metric-icon">📉</div>
+            </div>
+            <div class="metric-card green" id="metric-lucro">
+              <div class="metric-label">LUCRO LÍQUIDO REAL</div>
+              <div class="metric-value" id="val-lucro">R$ 0,00</div>
+              <div class="metric-sub">Entradas − Saídas</div>
+              <div class="metric-icon">⚖️</div>
+            </div>
+            <div class="metric-card yellow" id="metric-inadimplentes">
+              <div class="metric-label">INADIMPLÊNCIA</div>
+              <div class="metric-value" id="val-inadimplentes">0</div>
+              <div class="metric-sub">Clientes em atraso</div>
+              <div class="metric-icon">🚨</div>
+            </div>
+            <div class="metric-card purple" id="metric-clientes">
+              <div class="metric-label">CLIENTES ATIVOS</div>
+              <div class="metric-value" id="val-clientes">0</div>
+              <div class="metric-sub" id="sub-clientes">Total na base</div>
+              <div class="metric-icon">👥</div>
+            </div>
+            <div class="metric-card orange" id="metric-reserva">
+              <div class="metric-label">FUNDO DE RESERVA</div>
+              <div class="metric-value" id="val-reserva">R$ 0,00</div>
+              <div class="metric-sub">Caixa de segurança</div>
+              <div class="metric-icon">🛡️</div>
+            </div>
+          </div>
+
+          <!-- INADIMPLENTES RÁPIDOS -->
+          <div class="section-block">
+            <div class="section-block-header">
+              <h2 class="section-block-title">🚨 Alerta de Inadimplência</h2>
+              <button class="btn-sm btn-outline" onclick="App.navigate('mensalidades')">Ver Todos</button>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table" id="table-inadimplentes">
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>WhatsApp</th>
+                    <th>Valor</th>
+                    <th>Vencimento</th>
+                    <th>Dias em Atraso</th>
+                    <th>Ação</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-inadimplentes">
+                  <tr><td colspan="6" class="table-empty">Carregando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ÚLTIMAS TRANSAÇÕES -->
+          <div class="section-block">
+            <div class="section-block-header">
+              <h2 class="section-block-title">💳 Últimas Transações</h2>
+              <button class="btn-sm btn-outline" onclick="App.navigate('financeiro')">Ver Todas</button>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table" id="table-transacoes-dash">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Descrição</th>
+                    <th>Categoria</th>
+                    <th>Tipo</th>
+                    <th>Valor</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-transacoes-dash">
+                  <tr><td colspan="5" class="table-empty">Carregando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── CLIENTES ── -->
+        <section id="page-clientes" class="page">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Gestão de <span class="title-accent">Clientes</span></h1>
+              <p class="page-subtitle">CRM — Cadastro e gerenciamento da base de clientes</p>
+            </div>
+            <button class="btn-primary" id="btn-novo-cliente">+ Novo Cliente</button>
+          </div>
+
+          <div class="toolbar">
+            <div class="search-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="text" class="search-input" id="search-clientes" placeholder="Buscar por nome, e-mail ou WhatsApp..." />
+            </div>
+            <select class="filter-select" id="filter-status-cliente">
+              <option value="">Todos os Status</option>
+              <option value="ativo">Ativo</option>
+              <option value="suspenso">Suspenso</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table" id="table-clientes">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>WhatsApp</th>
+                  <th>E-mail</th>
+                  <th>Veículos</th>
+                  <th>Vencimento</th>
+                  <th>Valor Mensal</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-clientes">
+                <tr><td colspan="8" class="table-empty">Carregando clientes...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-pagination" id="pagination-clientes"></div>
+        </section>
+
+        <!-- ── MENSALIDADES ── -->
+        <section id="page-mensalidades" class="page">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Controle de <span class="title-accent">Mensalidades</span></h1>
+              <p class="page-subtitle">Acompanhamento de pagamentos e inadimplência</p>
+            </div>
+            <button class="btn-primary" id="btn-nova-mensalidade">+ Registrar Pagamento</button>
+          </div>
+
+          <div class="toolbar">
+            <div class="search-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="text" class="search-input" id="search-mensalidades" placeholder="Buscar cliente..." />
+            </div>
+            <select class="filter-select" id="filter-status-mens">
+              <option value="">Todos os Status</option>
+              <option value="pago">Pago</option>
+              <option value="a_vencer">A Vencer</option>
+              <option value="atrasado">Atrasado</option>
+            </select>
+            <select class="filter-select" id="filter-mes-mens">
+              <option value="">Todos os Meses</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Ref. Mês/Ano</th>
+                  <th>Vencimento</th>
+                  <th>Valor</th>
+                  <th>Status</th>
+                  <th>Pago Em</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-mensalidades">
+                <tr><td colspan="7" class="table-empty">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ── FINANCEIRO ── -->
+        <section id="page-financeiro" class="page">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Módulo <span class="title-accent">Financeiro</span></h1>
+              <p class="page-subtitle">Fluxo de caixa, entradas e saídas</p>
+            </div>
+            <button class="btn-primary" id="btn-nova-transacao">+ Nova Transação</button>
+          </div>
+
+          <!-- RESUMO MÊS -->
+          <div class="fin-summary-row">
+            <div class="fin-card entrada">
+              <span class="fin-label">▲ ENTRADAS</span>
+              <span class="fin-value" id="fin-entradas">R$ 0,00</span>
+            </div>
+            <div class="fin-card saida">
+              <span class="fin-label">▼ SAÍDAS</span>
+              <span class="fin-value" id="fin-saidas">R$ 0,00</span>
+            </div>
+            <div class="fin-card saldo">
+              <span class="fin-label">⚖ SALDO</span>
+              <span class="fin-value" id="fin-saldo">R$ 0,00</span>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <select class="filter-select" id="filter-tipo-tx">
+              <option value="">Todos os Tipos</option>
+              <option value="entrada">Entrada</option>
+              <option value="saida">Saída</option>
+            </select>
+            <select class="filter-select" id="filter-cat-tx">
+              <option value="">Todas as Categorias</option>
+              <option value="mensalidade">Mensalidade</option>
+              <option value="chips_m2m">Chips M2M</option>
+              <option value="servidor">Servidor AWS</option>
+              <option value="marketing">Marketing</option>
+              <option value="outros">Outros</option>
+            </select>
+            <select class="filter-select" id="filter-mes-tx">
+              <option value="">Todos os Meses</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Descrição</th>
+                  <th>Categoria</th>
+                  <th>Tipo</th>
+                  <th>Valor</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-transacoes">
+                <tr><td colspan="6" class="table-empty">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ── FUNDO DE RESERVA ── -->
+        <section id="page-reserva" class="page">
+          <div class="page-header">
+            <h1 class="page-title">Fundo de <span class="title-accent">Reserva</span></h1>
+            <p class="page-subtitle">Caixa de emergência e proteção financeira da empresa</p>
+          </div>
+
+          <div class="reserva-layout">
+            <div class="reserva-main">
+              <div class="reserva-saldo-card">
+                <div class="card-corner tl"></div>
+                <div class="card-corner tr"></div>
+                <div class="card-corner bl"></div>
+                <div class="card-corner br"></div>
+                <p class="reserva-label">🛡️ SALDO DO FUNDO</p>
+                <p class="reserva-valor" id="reserva-saldo-valor">R$ 0,00</p>
+                <p class="reserva-sub" id="reserva-sub">Equivalente a <span id="reserva-meses">0</span> mês(es) de operação</p>
+              </div>
+
+              <div class="section-block">
+                <div class="section-block-header">
+                  <h2 class="section-block-title">Histórico de Depósitos</h2>
+                </div>
+                <div class="table-wrap">
+                  <table class="data-table">
+                    <thead>
+                      <tr><th>Data</th><th>Origem (% do Lucro)</th><th>Valor Depositado</th><th>Saldo Acumulado</th></tr>
+                    </thead>
+                    <tbody id="tbody-reserva">
+                      <tr><td colspan="4" class="table-empty">Nenhum depósito registrado.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="reserva-config">
+              <div class="config-card">
+                <div class="card-corner tl"></div>
+                <div class="card-corner tr"></div>
+                <div class="card-corner bl"></div>
+                <div class="card-corner br"></div>
+                <h3 class="config-title">⚙ Configurar Retenção</h3>
+                <p class="config-desc">Defina o percentual do lucro líquido que será automaticamente destinado ao fundo de reserva.</p>
+                <div class="field-group">
+                  <label class="field-label">% DO LUCRO LÍQUIDO</label>
+                  <div class="field-wrap">
+                    <input type="number" id="reserva-percent" class="field-input" min="0" max="100" step="0.5" placeholder="Ex: 10" />
+                    <span class="field-suffix">%</span>
+                  </div>
+                </div>
+                <div class="reserva-preview" id="reserva-preview" style="display:none">
+                  <span>Transferência estimada: </span>
+                  <strong id="reserva-preview-val">R$ 0,00</strong>
+                </div>
+                <button class="btn-primary" id="btn-salvar-reserva" style="width:100%">💾 Salvar Configuração</button>
+                <button class="btn-outline" id="btn-depositar-reserva" style="width:100%; margin-top:0.5rem">▶ Depositar Agora</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── CONFIGURAÇÕES ── -->
+        <section id="page-configuracoes" class="page">
+          <div class="page-header">
+            <h1 class="page-title">⚙ <span class="title-accent">Configurações</span></h1>
+            <p class="page-subtitle">Configurações do sistema e credenciais</p>
+          </div>
+
+          <div class="config-grid">
+            <div class="config-card">
+              <div class="card-corner tl"></div><div class="card-corner tr"></div>
+              <div class="card-corner bl"></div><div class="card-corner br"></div>
+              <h3 class="config-title">🔗 Supabase (Banco de Dados)</h3>
+              <p class="config-desc">Configure as credenciais do Supabase para persistência de dados em nuvem (PostgreSQL gratuito).</p>
+              <div class="field-group">
+                <label class="field-label">SUPABASE URL</label>
+                <div class="field-wrap">
+                  <input type="text" id="cfg-sb-url" class="field-input" placeholder="https://xxxx.supabase.co" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">ANON KEY (PUBLIC)</label>
+                <div class="field-wrap">
+                  <input type="text" id="cfg-sb-key" class="field-input" placeholder="eyJhbGci..." />
+                </div>
+              </div>
+              <button class="btn-primary" id="btn-salvar-supabase">💾 Salvar e Testar Conexão</button>
+              <div id="supabase-status" class="cfg-status hidden"></div>
+            </div>
+
+            <div class="config-card">
+              <div class="card-corner tl"></div><div class="card-corner tr"></div>
+              <div class="card-corner bl"></div><div class="card-corner br"></div>
+              <h3 class="config-title">🔒 Credenciais de Acesso</h3>
+              <p class="config-desc">Altere o usuário e senha do Administrador Master. Dados ficam no armazenamento local criptografado.</p>
+              <div class="field-group">
+                <label class="field-label">NOVO USUÁRIO / E-MAIL</label>
+                <div class="field-wrap">
+                  <input type="text" id="cfg-new-user" class="field-input" placeholder="admin@kappo.com" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">NOVA SENHA MASTER</label>
+                <div class="field-wrap">
+                  <input type="password" id="cfg-new-pass" class="field-input" placeholder="Mínimo 8 caracteres" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">CONFIRMAR SENHA</label>
+                <div class="field-wrap">
+                  <input type="password" id="cfg-conf-pass" class="field-input" placeholder="Repita a senha" />
+                </div>
+              </div>
+              <button class="btn-primary" id="btn-salvar-creds">🔐 Atualizar Credenciais</button>
+              <div id="creds-status" class="cfg-status hidden"></div>
+            </div>
+
+            <div class="config-card">
+              <div class="card-corner tl"></div><div class="card-corner tr"></div>
+              <div class="card-corner bl"></div><div class="card-corner br"></div>
+              <h3 class="config-title">🚗 Integração Traccar</h3>
+              <p class="config-desc">Configure a URL do servidor Traccar para vincular IDs de dispositivos aos clientes cadastrados.</p>
+              <div class="field-group">
+                <label class="field-label">TRACCAR SERVER URL</label>
+                <div class="field-wrap">
+                  <input type="text" id="cfg-traccar-url" class="field-input" placeholder="https://traccar.seudominio.com" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">TOKEN API (Opcional)</label>
+                <div class="field-wrap">
+                  <input type="text" id="cfg-traccar-token" class="field-input" placeholder="Token de integração" />
+                </div>
+              </div>
+              <button class="btn-primary" id="btn-salvar-traccar">💾 Salvar Traccar</button>
+            </div>
+
+            <div class="config-card danger-zone">
+              <div class="card-corner tl"></div><div class="card-corner tr"></div>
+              <div class="card-corner bl"></div><div class="card-corner br"></div>
+              <h3 class="config-title" style="color:var(--red)">⚠ Zona de Perigo</h3>
+              <p class="config-desc">Ações irreversíveis. Prossiga com cautela.</p>
+              <button class="btn-danger" id="btn-clear-storage">🗑 Limpar Dados Locais (Demo)</button>
+              <button class="btn-danger" id="btn-export-data" style="margin-top:0.5rem">📤 Exportar Dados (JSON)</button>
+            </div>
+          </div>
+        </section>
+
+      </div><!-- /pages-wrapper -->
+    </main>
+  </div><!-- /app -->
+
+  <!-- ═══════════════════════════════════════════════════
+       MODAIS
+  ════════════════════════════════════════════════════ -->
+  <div class="modal-overlay hidden" id="modal-overlay">
+
+    <!-- MODAL CLIENTE -->
+    <div class="modal hidden" id="modal-cliente">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-cliente-title">Novo Cliente</h2>
+        <button class="modal-close" data-modal="modal-cliente">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="cliente-id" />
+        <div class="form-row">
+          <div class="field-group">
+            <label class="field-label">NOME COMPLETO *</label>
+            <div class="field-wrap"><input type="text" id="cliente-nome" class="field-input" placeholder="Nome do cliente" /></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">WHATSAPP *</label>
+            <div class="field-wrap"><input type="tel" id="cliente-whatsapp" class="field-input" placeholder="(11) 99999-9999" /></div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field-group">
+            <label class="field-label">E-MAIL</label>
+            <div class="field-wrap"><input type="email" id="cliente-email" class="field-input" placeholder="email@exemplo.com" /></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">TRACCAR DEVICE ID</label>
+            <div class="field-wrap"><input type="text" id="cliente-traccar-id" class="field-input" placeholder="ID do dispositivo no Traccar" /></div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field-group">
+            <label class="field-label">Nº DE VEÍCULOS</label>
+            <div class="field-wrap"><input type="number" id="cliente-veiculos" class="field-input" min="1" value="1" /></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">DIA DE VENCIMENTO</label>
+            <div class="field-wrap"><input type="number" id="cliente-vencimento" class="field-input" min="1" max="31" placeholder="Ex: 10" /></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">VALOR MENSAL (R$)</label>
+            <div class="field-wrap"><input type="number" id="cliente-valor" class="field-input" min="0" step="0.01" placeholder="0,00" /></div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field-group">
+            <label class="field-label">STATUS</label>
+            <select id="cliente-status" class="field-input field-select">
+              <option value="ativo">Ativo</option>
+              <option value="suspenso">Suspenso</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">OBSERVAÇÕES</label>
+            <div class="field-wrap"><input type="text" id="cliente-obs" class="field-input" placeholder="Notas internas..." /></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" data-modal="modal-cliente">Cancelar</button>
+        <button class="btn-primary" id="btn-salvar-cliente">💾 Salvar Cliente</button>
+      </div>
+    </div>
+
+    <!-- MODAL MENSALIDADE -->
+    <div class="modal hidden" id="modal-mensalidade">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-mens-title">Registrar Pagamento</h2>
+        <button class="modal-close" data-modal="modal-mensalidade">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="mens-id" />
+        <div class="form-row">
+          <div class="field-group" style="flex:2">
+            <label class="field-label">CLIENTE *</label>
+            <select id="mens-cliente-id" class="field-input field-select">
+              <option value="">Selecione um cliente...</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">MÊS REF.</label>
+            <select id="mens-mes" class="field-input field-select"></select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">ANO REF.</label>
+            <input type="number" id="mens-ano" class="field-input" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field-group">
+            <label class="field-label">VALOR (R$) *</label>
+            <div class="field-wrap"><input type="number" id="mens-valor" class="field-input" min="0" step="0.01" /></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">VENCIMENTO *</label>
+            <div class="field-wrap"><input type="date" id="mens-vencimento" class="field-input" /></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">STATUS</label>
+            <select id="mens-status" class="field-input field-select">
+              <option value="a_vencer">A Vencer</option>
+              <option value="pago">Pago</option>
+              <option value="atrasado">Atrasado</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row" id="mens-pago-em-row">
+          <div class="field-group">
+            <label class="field-label">DATA DO PAGAMENTO</label>
+            <div class="field-wrap"><input type="date" id="mens-pago-em" class="field-input" /></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">OBSERVAÇÃO</label>
+            <div class="field-wrap"><input type="text" id="mens-obs" class="field-input" placeholder="Ex: Pago via Pix" /></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" data-modal="modal-mensalidade">Cancelar</button>
+        <button class="btn-primary" id="btn-salvar-mensalidade">💾 Salvar Mensalidade</button>
+      </div>
+    </div>
+
+    <!-- MODAL TRANSAÇÃO -->
+    <div class="modal hidden" id="modal-transacao">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-tx-title">Nova Transação</h2>
+        <button class="modal-close" data-modal="modal-transacao">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="tx-id" />
+        <div class="form-row">
+          <div class="field-group">
+            <label class="field-label">TIPO *</label>
+            <select id="tx-tipo" class="field-input field-select">
+              <option value="entrada">▲ Entrada</option>
+              <option value="saida">▼ Saída</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">CATEGORIA *</label>
+            <select id="tx-categoria" class="field-input field-select">
+              <option value="mensalidade">Mensalidade</option>
+              <option value="chips_m2m">Chips M2M</option>
+              <option value="servidor">Servidor AWS</option>
+              <option value="marketing">Marketing</option>
+              <option value="outros">Outros</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field-group" style="flex:2">
+            <label class="field-label">DESCRIÇÃO *</label>
+            <div class="field-wrap"><input type="text" id="tx-descricao" class="field-input" placeholder="Ex: Mensalidade cliente João Silva" /></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">DATA *</label>
+            <div class="field-wrap"><input type="date" id="tx-data" class="field-input" /></div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field-group">
+            <label class="field-label">VALOR (R$) *</label>
+            <div class="field-wrap"><input type="number" id="tx-valor" class="field-input" min="0" step="0.01" /></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">CLIENTE RELACIONADO</label>
+            <select id="tx-cliente" class="field-input field-select">
+              <option value="">— Nenhum —</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" data-modal="modal-transacao">Cancelar</button>
+        <button class="btn-primary" id="btn-salvar-transacao">💾 Salvar Transação</button>
+      </div>
+    </div>
+
+    <!-- MODAL CONFIRMAR DELETE -->
+    <div class="modal modal-sm hidden" id="modal-confirm">
+      <div class="modal-header">
+        <h2 class="modal-title" style="color:var(--red)">⚠ Confirmar Exclusão</h2>
+        <button class="modal-close" data-modal="modal-confirm">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="confirm-msg" id="confirm-msg">Tem certeza que deseja excluir este registro? Esta ação é irreversível.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" data-modal="modal-confirm">Cancelar</button>
+        <button class="btn-danger" id="btn-confirm-delete">🗑 Excluir Definitivamente</button>
+      </div>
+    </div>
+
+  </div><!-- /modal-overlay -->
+
+  <!-- TOAST NOTIFICATIONS -->
+  <div id="toast-container"></div>
+
+  <script src="db.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
